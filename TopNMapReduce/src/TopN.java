@@ -13,13 +13,19 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 
 public class TopN {
 
+	private final static int TOP_NUMBER=10;
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
@@ -87,15 +93,40 @@ public class TopN {
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
 
-            Map<Text, IntWritable> sortedMap = MiscUtils.sortByValues(countMap);
+            Map<Text, IntWritable> sortedMap = sortByValues(countMap);
 
             int counter = 0;
             for (Text key : sortedMap.keySet()) {
-                if (counter++ == 20) {
+                if (counter++ == TOP_NUMBER) {
                     break;
                 }
                 context.write(key, sortedMap.get(key));
             }
+        }
+        
+        
+        //sort a map by its value
+        //it use LinkedHashMap
+        public static <K extends Comparable, V extends Comparable> Map<K, V> sortByValues(Map<K, V> map) {
+            List<Map.Entry<K, V>> entries = new LinkedList<Map.Entry<K, V>>(map.entrySet());
+
+            Collections.sort(entries, new Comparator<Map.Entry<K, V>>() {
+
+                @Override
+                public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                    return o2.getValue().compareTo(o1.getValue());
+                }
+            });
+
+            //LinkedHashMap will keep the keys in the order they are inserted
+            //which is currently sorted on natural ordering
+            Map<K, V> sortedMap = new LinkedHashMap<K, V>();
+
+            for (Map.Entry<K, V> entry : entries) {
+                sortedMap.put(entry.getKey(), entry.getValue());
+            }
+
+            return sortedMap;
         }
     }
 
