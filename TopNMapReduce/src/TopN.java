@@ -37,7 +37,7 @@ public class TopN {
         job.setJobName("Top N");
         job.setJarByClass(TopN.class);
         job.setMapperClass(TopNMapper.class);
-        //job.setCombinerClass(TopNReducer.class);
+       // job.setCombinerClass(TopNCombiner.class);
         job.setReducerClass(TopNReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
@@ -97,7 +97,8 @@ public class TopN {
 
             int counter = 0;
             for (Text key : sortedMap.keySet()) {
-                if (counter++ == TOP_NUMBER) {
+            	counter=counter+1;
+                if (counter == TOP_NUMBER) {
                     break;
                 }
                 context.write(key, sortedMap.get(key));
@@ -133,18 +134,18 @@ public class TopN {
     /**
      * The combiner retrieves every word and puts it into a Map: if the word already exists in the
      * map, increments its value, otherwise sets it to 1.
-     */
-    public static class TopNCombiner extends Reducer<Text, IntWritable, Text, IntWritable> {
-
-        @Override
-        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-
-            // computes the number of occurrences of a single word
-            int sum = 0;
-            for (IntWritable val : values) {
-                sum += val.get();
-            }
-            context.write(key, new IntWritable(sum));
-        }
-    }
+//     */
+//    public static class TopNCombiner extends Reducer<Text, IntWritable, Text, IntWritable> {
+//
+//        @Override
+//        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+//
+//            // computes the number of occurrences of a single word
+//            int sum = 0;
+//            for (IntWritable val : values) {
+//                sum += val.get();
+//            }
+//            context.write(key, new IntWritable(sum));
+//        }
+//    }
 }
